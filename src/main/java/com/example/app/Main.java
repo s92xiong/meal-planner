@@ -1,5 +1,6 @@
 package com.example.app;
 
+import com.example.app.mealplanner.MealPlanner;
 import com.example.app.model.Meal;
 import com.example.app.model.MealDAOImpl;
 
@@ -88,13 +89,17 @@ public class Main {
         switch (operation) {
             case "add" -> add();
             case "show" -> show();
-//            case "plan" -> plan();
+            case "plan" -> plan();
 //            case "save" -> save();
             case "exit" -> {
                 return -1;
             }
         }
         return 0;
+    }
+
+    private void plan() {
+        MealPlanner.planMeal(meals, connection);
     }
 
     /**
