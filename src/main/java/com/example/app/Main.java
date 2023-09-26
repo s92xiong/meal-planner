@@ -87,7 +87,7 @@ public class Main {
         String operation = getInput("What would you like to do (add, show, plan, save, exit)?");
         switch (operation) {
             case "add" -> add();
-//            case "show" -> show();
+            case "show" -> show();
 //            case "plan" -> plan();
 //            case "save" -> save();
             case "exit" -> {
@@ -97,6 +97,31 @@ public class Main {
         return 0;
     }
 
+    /**
+     * Show all meals in a category (breakfast, lunch, dinner)
+     */
+    private void show() {
+        String category = getCategory("category", "print");
+        MealDAOImpl mealDAO = new MealDAOImpl(connection);
+        // Query for meals with the specified category
+        List<Meal> mealCategoryList = mealDAO.getMealsByCategory(category);
+
+        if (mealCategoryList.isEmpty()) {
+            System.out.println("No meals found.");
+        } else {
+            System.out.println("Category: " + category);
+            for (Meal meal : mealCategoryList) {
+                int id = meal.getMeal_id();
+                List<String> list = getMealIngredients(id);
+                String[] ingredients = list.toArray(new String[list.size()]);
+                printMealInfo(meal.getMeal(), ingredients);
+            }
+        }
+    }
+
+    /**
+     * Add a meal for breakfast, lunch, or dinner
+     */
     private int add() throws SQLException {
         // Get category
         String category = getCategory("meal", "add");
@@ -167,6 +192,27 @@ public class Main {
         return new Scanner(System.in).nextLine();
     }
 
+    private List<String> getMealIngredients(int meal_id) {
+        List<String> list = new ArrayList<>();
+
+        String sql = "SELECT i.ingredient FROM ingredients i JOIN meals m ON i.meal_id = m.meal_id WHERE m.meal_id = ?";
+        PreparedStatement statement;
+        try {
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, meal_id);
+            ResultSet rs = statement.executeQuery();
+
+            while (rs.next()) {
+                String ingredient = rs.getString("ingredient");
+                list.add(ingredient);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
     private String getCategory(String s1, String s2) {
         String category;
         boolean invalidCategory = false;
@@ -206,6 +252,18 @@ public class Main {
             }
         }
         return true;
+    }
+
+    private static void printMealInfo(String name, String[] ingredients) {
+        System.out.printf("""
+                Name: %s
+                Ingredients:
+                """, name);
+
+        for (String ingredient : ingredients) {
+            System.out.println(ingredient);
+        }
+        System.out.print("\n");
     }
 
     public static int generateRandomInt() {

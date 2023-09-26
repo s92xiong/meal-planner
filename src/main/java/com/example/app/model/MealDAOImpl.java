@@ -1,6 +1,7 @@
 package com.example.app.model;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -37,7 +38,7 @@ public class MealDAOImpl implements MealDAO {
             // Set the parameter values for the ingredient PreparedStatement
             ingredientStatement.setString(1, ingredient);
             ingredientStatement.setInt(2, ingredientId);
-            ingredientStatement.setInt(3, mealId);
+            ingredientStatement.setInt(3, id);
 
             // Execute the ingredient PreparedStatement to insert the ingredient
             ingredientStatement.executeUpdate();
@@ -69,6 +70,30 @@ public class MealDAOImpl implements MealDAO {
         }
 
         return meals;
+    }
+
+    @Override
+    public List<Meal> getMealsByCategory(String category) {
+        List<Meal> mealCategoryList = new LinkedList<>();
+        String sql = "SELECT * FROM meals WHERE category = ?";
+        PreparedStatement statement;
+        try {
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, category);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                var categoryName = resultSet.getString("category");
+                var mealName = resultSet.getString("meal");
+                var mealId = resultSet.getInt("meal_id");
+                Meal meal = new Meal(categoryName, mealName, mealId);
+                mealCategoryList.add(meal);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return mealCategoryList;
     }
 
     public static int generateRandomInt() {
