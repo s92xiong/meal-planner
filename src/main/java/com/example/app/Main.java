@@ -99,6 +99,10 @@ public class Main {
         return 0;
     }
 
+    /**
+     * This method prompts the user to input a file name for a .txt file, saving the meal plan
+     * from the db to the specified text file
+     */
     private void save() {
         DailyMealPlanDAOImpl mealPlan = new DailyMealPlanDAOImpl(connection);
         IngredientDAOImpl ingredientDao = new IngredientDAOImpl(connection);
@@ -152,6 +156,10 @@ public class Main {
         }
     }
 
+    /**
+     * This method calls MealPlanner's planMeal method which saves a
+     * DailyMealPlan for each day of the week into the Postgres db
+     */
     private void plan() {
         MealPlanner.planMeal(meals, connection);
     }
@@ -179,7 +187,7 @@ public class Main {
     }
 
     /**
-     * Add a meal for breakfast, lunch, or dinner
+     * Add a meal for breakfast, lunch, or dinner into the Postgres db
      */
     private int add() throws SQLException {
         // Get category
