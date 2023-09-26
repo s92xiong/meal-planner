@@ -1,10 +1,11 @@
 package com.example.app;
 
 import com.example.app.mealplanner.MealPlanner;
-import com.example.app.model.Meal;
-import com.example.app.model.MealDAOImpl;
+import com.example.app.model.*;
 
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
@@ -90,12 +91,65 @@ public class Main {
             case "add" -> add();
             case "show" -> show();
             case "plan" -> plan();
-//            case "save" -> save();
+            case "save" -> save();
             case "exit" -> {
                 return -1;
             }
         }
         return 0;
+    }
+
+    private void save() {
+        DailyMealPlanDAOImpl mealPlan = new DailyMealPlanDAOImpl(connection);
+        IngredientDAOImpl ingredientDao = new IngredientDAOImpl(connection);
+
+        List<Integer> mealIds = mealPlan.read();
+        List<Ingredient> ingredients = ingredientDao.read();
+
+        // There should be 21 meals in weekly meal plan, 3 meals per day
+        if (mealIds == null ||  mealIds.size() < (7 * 3)) {
+            System.out.println("Unable to save. Plan your meals first.");
+            return;
+        }
+
+        HashMap<String, Integer> hashMap = new HashMap<>();
+
+        // Map the mealIds to an actual list of meals
+        List<Meal> mealPlanList = new ArrayList<>();
+        for (Integer mealPlanId : mealIds) {
+            for (Meal meal : meals) {
+                if (meal.getMeal_id() == mealPlanId) {
+                    mealPlanList.add(meal);
+                    break;
+                }
+            }
+        }
+
+        for (Ingredient ingredient : ingredients) {
+            var ingredientMealId = ingredient.getMealId();
+            var name = ingredient.getName();
+            for (Meal meal : mealPlanList) {
+                if (meal.getMeal_id() == ingredientMealId) {
+                    if (hashMap.containsKey(name)) {
+                        var currentVal = hashMap.get(name);
+                        hashMap.put(name, currentVal + 1);
+                    } else {
+                        hashMap.put(name, 1);
+                    }
+                }
+            }
+        }
+
+        // Get input
+        var fileName = getInput("Input a filename:");
+
+        // Call the writeHashMapToFile method to write the content to the file
+        try {
+            writeHashMapToFile(hashMap, fileName);
+            System.out.println("Saved!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void plan() {
@@ -274,5 +328,25 @@ public class Main {
     public static int generateRandomInt() {
         Random random = new Random();
         return random.nextInt(2147483647) + 1;
+    }
+
+    public static void writeHashMapToFile(Map<String, Integer> map, String filePath) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                String ingredient = entry.getKey();
+                int count = entry.getValue();
+
+                // Write the ingredient name to the file
+                writer.write(ingredient);
+
+                // If count is greater than 1, write "x" and the count
+                if (count > 1) {
+                    writer.write(" x" + count);
+                }
+
+                // Write a newline character to separate entries
+                writer.newLine();
+            }
+        }
     }
 }
